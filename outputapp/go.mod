@@ -1,3 +1,3 @@
-module github.com/signavio-hiring/coding-challenge-rajiviky/tree/raji/ouputapp
+module github.com/Rajiviky/sap_demo/tree/raji/ouputapp
 
 go 1.21.0
