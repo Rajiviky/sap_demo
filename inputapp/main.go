@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/signavio-hiring/coding-challenge-rajiviky/structcommon"
+	"github.com/signavio-hiring/coding-challenge-rajiviky/tree/raji/structcommon"
 )
 
 var JsonInput []byte

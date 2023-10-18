@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/signavio-hiring/coding-challenge-rajiviky/structcommon"
+	"github.com/signavio-hiring/coding-challenge-rajiviky/tree/raji/structcommon"
 )
 
 func revMsg(input string) string {
