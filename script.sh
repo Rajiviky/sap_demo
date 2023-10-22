@@ -29,3 +29,38 @@ git tag "$tag"
 git push origin "$tag"
 
 echo "Tagged and pushed successfully!"
+
+# Check if the Docker image tag already exists on Docker Hub
+docker_repo="rajimcy/codingchallenge-si"
+if tag_exists_on_dockerhub "$docker_repo" "$tag"; then
+  echo "Image with tag $tag already exists on Docker Hub. Aborting."
+  exit 1
+fi
+
+# Split the image tag into app_name and app_version
+app_name=$(echo "$tag" | cut -d '-' -f 1)
+app_version=$(echo "$tag" | cut -d '-' -f 2)
+
+# Choose the directory based on app_name
+if [ "$app_name" == "inputapp" ]; then
+  app_directory="./inputapp"
+elif [ "$app_name" == "outputapp" ]; then
+  app_directory="./outputapp"
+else
+  echo "Invalid app name in the image tag. Use 'inputapp-versionnumber' or 'outputapp-versionnumber'."
+  exit 1
+fi
+
+# Build the Docker image from the chosen directory
+echo "Building Docker image for $app_name from $app_directory..."
+docker build -t "$docker_repo:$tag" "$app_directory"
+
+
+
+# Push the image to Docker Hub
+echo "Pushing Docker image to Docker Hub..."
+docker push "$docker_repo:$tag"
+
+
+
+echo "Tagged and pushed successfully!"
