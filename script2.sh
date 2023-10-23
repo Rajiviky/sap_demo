@@ -61,55 +61,74 @@ while true; do
   fi
 done
 
-# Prompt the user for a commit message
-read -p "Enter a commit message: " commit_message
+while true; do
+  # Prompt the user for a commit message
+  read -p "Enter a commit message: " commit_message
 
-# Commit and push the changes
-git add . && \
-git commit -m "$commit_message" && \
-git tag "$tag" && \
-git push origin "$tag" && \
-echo "Tagged and pushed successfully!"
+  # Commit and push the changes
+  git add . && \
+  git commit -m "$commit_message" && \
+  git tag "$tag" && \
+  git push origin "$tag" && \
+  echo "Tagged and pushed successfully!"
 
-app_name=$(echo "$tag" | cut -d '-' -f 2)
-app_version=$(echo "$tag" | cut -d '-' -f 1)
+  app_name=$(echo "$tag" | cut -d '-' -f 2)
+  app_version=$(echo "$tag" | cut -d '-' -f 1)
 
-# Choose the directory based on app_name
-if [ "$app_name" == "inputapp" ]; then
-  app_directory="./inputapp"
-elif [ "$app_name" == "outputapp" ]; then
-  app_directory="./outputapp"
-else
-  echo "Invalid app name in the image tag. Use 'X.Y.Z-inputapp' or 'X.Y.Z-outputapp' format."
-  exit 1
-fi
+  # Choose the directory based on app_name
+  if [ "$app_name" == "inputapp" ]; then
+    app_directory="./inputapp"
+  elif [ "$app_name" == "outputapp" ]; then
+    app_directory="./outputapp"
+  else
+    echo "Invalid app name in the image tag. Use 'X.Y.Z-inputapp' or 'X.Y.Z-outputapp' format."
+    exit 1
+  fi
 
-# Build and push the Docker image
-build_and_push_image "$docker_repo" "$tag" "$app_directory"
+  # Build and push the Docker image
+  build_and_push_image "$docker_repo" "$tag" "$app_directory"
 
-# Deploy the Helm chart
-deploy_helm_chart "$app_name"
+  # Deploy the Helm chart
+  deploy_helm_chart "$app_name"
 
-# Ask the user if they want to build and deploy another application or tag
-read -p "Do you want to build and deploy another application or tag? (yes/no): " continue
-if [ "$continue" != "yes" ]; then
-  # If the user selects "no," proceed with the final steps
-  read -p "Enter the 'id': " id
-  read -p "Enter the 'message': " message
+  # Ask the user if they want to build and deploy another application or tag
+  read -p "Do you want to build and deploy another application or tag? (yes/no): " continue
+  if [ "$continue" != "yes" ]; then
+    break
+  fi
 
-  base_url="http://demoinputapp.info"
+  while true; do
+    # Prompt the user for a valid tag
+    read -p "Enter the tag (e.g., inputapp-1.1.0 or outputapp-1.1.0): " tag
 
-  input_url="$base_url/inputJason?id=$id&message=$message"
-  output_url="$base_url/outputJason"
+    if is_valid_tag "$tag"; then
+      if tag_exists_on_dockerhub "$docker_repo" "$tag"; then
+        echo "Image with tag $tag already exists on Docker Hub. Please choose a different tag."
+      else
+        break
+      fi
+    else
+      echo "Invalid tag format. Example format: inputapp-1.1.0 or outputapp-1.1.0"
+    fi
+  done
+done
 
-  input_response=$(curl -s "$input_url")
-  output_response=$(curl -s "$output_url")
+# Proceed with the final steps
+read -p "Enter the 'id': " id
+read -p "Enter the 'message': " message
 
-  echo "HTTP responses from inputapp"
+base_url="http://demoinputapp.info"
 
-  echo "Response from $input_url:"
-  echo "$input_response"
+input_url="$base_url/inputJason?id=$id&message=$message"
+output_url="$base_url/outputJason"
 
-  echo "Response from $output_url:"
-  echo "$output_response"
-fi
+input_response=$(curl -s "$input_url")
+output_response=$(curl -s "$output_url")
+
+echo "HTTP responses from inputapp"
+
+echo "Response from $input_url:"
+echo "$input_response"
+
+echo "Response from $output_url:"
+echo "$output_response"
