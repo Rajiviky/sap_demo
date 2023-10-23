@@ -61,7 +61,6 @@ func outputJson(w http.ResponseWriter, r *http.Request) {
 
 func reverseRedir(JsonInput []byte) ([]byte, error) {
 
-	// Read the URL from an environment variable
 	host := os.Getenv("OUTPUTAPP_HOST")
 	url := "http://" + host + "/reverJson"
 	fmt.Println("reverseRedir:", string(JsonInput))
