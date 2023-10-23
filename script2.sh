@@ -16,7 +16,7 @@ tag_exists_on_dockerhub() {
 is_valid_tag() {
   local tag="$1"
   # The tag should match the pattern: version-app_name (e.g., 1.1.0-inputapp)
-  if [[ ! "$tag" =~ ^[0-9]+\.[0-9]+\.[0-9]+-(inputapp|outputapp)$ ]]; then
+  if [[ ! "$tag" =~ ^(inputapp|outputapp)-[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
     return 1
   fi
   return 0
@@ -39,8 +39,16 @@ build_and_push_image() {
 deploy_helm_chart() {
   local app_name="$1"
 
-  echo "Applying Helm configuration for $app_name..."
-  helm install -f helm/$app_name/values.yaml $app_name helm/$app_name
+  # Check if the release already exists
+  release_exists=$(helm list -q -n default | grep "$app_name")
+
+  if [ -z "$release_exists" ]; then
+    echo "Installing Helm configuration for $app_name..."
+    helm install -f helm/$app_name/values.yaml $app_name helm/$app_name
+  else
+    echo "Upgrading Helm configuration for $app_name..."
+    helm upgrade -f helm/$app_name/values.yaml $app_name helm/$app_name
+  fi
 }
 
 # Main script
