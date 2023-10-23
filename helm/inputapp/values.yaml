@@ -9,7 +9,7 @@ inputapp:
       name: inputapp
       imagePullPolicy: IfNotPresent
       image: rajimcy/codingchallenge-si
-      tag: 1.1.0-inputapp
+      tag: inputapp-1.1.0
       ports:
         containerPort: 3000
         name: inputapphttp

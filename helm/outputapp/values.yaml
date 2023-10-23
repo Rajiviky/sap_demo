@@ -9,7 +9,7 @@ outputapp:
       name: outputapp
       imagePullPolicy: IfNotPresent
       image: rajimcy/codingchallenge-si
-      tag: 1.1.0-outputapp
+      tag: outputapp-1.1.0
       ports:
         containerPort: 5000
         name: outputhttp
