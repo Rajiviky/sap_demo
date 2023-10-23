@@ -45,7 +45,6 @@ func reverseJson(w http.ResponseWriter, r *http.Request) {
 	w.Write(resJson)
 }
 
-// testing
 func main() {
 	mux := http.NewServeMux()
 
