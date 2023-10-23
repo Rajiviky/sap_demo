@@ -10,7 +10,6 @@ type JsonResponse struct {
 	Message string `json:"message"`
 }
 
-// testing
 func revMsg(input string) string {
 	runes := []rune(input)
 	reversed := make([]rune, len(runes))

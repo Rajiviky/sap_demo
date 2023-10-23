@@ -66,20 +66,19 @@ while true; do
   fi
 done
 
+
+
 while true; do
-  # Prompt the user for a commit message
   read -p "Enter a commit message: " commit_message
 
   # Commit and push the changes
-  git add . && \
+  git add ./$app_name && \
   git commit -m "$commit_message" && \
   git tag "$tag" && \
   git push origin "$tag" && \
   echo "changes Tagged and pushed successfully!"
 
-  app_name=$(echo "$tag" | cut -d '-' -f 1)
-  app_version=$(echo "$tag" | cut -d '-' -f 2)
-
+  
   # Choose the directory based on app_name
   if [ "$app_name" == "inputapp" ]; then
     app_directory="./inputapp"
@@ -93,6 +92,12 @@ while true; do
   # Build and push the Docker image
   build_and_push_image "$docker_repo" "$tag" "$app_directory"
 
+  read -p "Proceed with deploying the Helm chart for $app_name? (yes/no): " deploy_confirmation
+    if [ "$deploy_confirmation" != "yes" ]; then
+  echo "Deployment canceled. Exiting."
+  exit 0
+   fi
+
   # Deploy the Helm chart
   deploy_helm_chart "$app_name"
 
@@ -105,11 +110,13 @@ while true; do
   while true; do
     # Prompt the user for a valid tag
     read -p "Enter the tag (e.g., inputapp-1.1.0 or outputapp-1.1.0): " tag
-
+     echo $tag
     if is_valid_tag "$tag"; then
       if tag_exists_on_dockerhub "$docker_repo" "$tag"; then
         echo "Image with tag $tag already exists on Docker Hub. Please choose a different tag."
       else
+        app_name=$(echo "$tag" | cut -d '-' -f 1)
+        app_version=$(echo "$tag" | cut -d '-' -f 2)
         break
       fi
     else

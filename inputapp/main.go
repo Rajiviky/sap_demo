@@ -61,17 +61,12 @@ func outputJson(w http.ResponseWriter, r *http.Request) {
 
 func reverseRedir(JsonInput []byte) ([]byte, error) {
 
-	/* During k8s deployment serviceName := os.Getenv("SECOND_APP_SERVICE_NAME")
-	url := "http://" + serviceName + ":5000/reverJson"  */
-
 	// Read the URL from an environment variable
 	host := os.Getenv("OUTPUTAPP_HOST")
 	url := "http://" + host + "/reverJson"
-
 	fmt.Println("reverseRedir:", string(JsonInput))
 	fmt.Println("OUTPUTAPP_HOST", host)
 	fmt.Println("connecting to app2")
-	//url := "http://app2:5000/reverJson"
 
 	reqBody := bytes.NewBuffer(JsonInput)
 
