@@ -6,20 +6,23 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"strconv"
-
-	"github.com/Rajiviky/sap_demo/tree/raji/structcommon"
 )
+
+type JsonResponse struct {
+	Id      int    `json:"id"`
+	Message string `json:"message"`
+}
 
 var JsonInput []byte
 
-func inputJason(w http.ResponseWriter, r *http.Request) {
+func inputJson(w http.ResponseWriter, r *http.Request) {
 	id_s := r.URL.Query().Get("id")
 	message := r.URL.Query().Get("message")
 
-	// Error handling: Write error code (400), if either "id" or "message" is missing.(enhnace it later)
 	if id_s == "" || message == "" {
-		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("Error: 'message' and 'id' should not be empty"))
 		return
 	}
 	id, err := strconv.Atoi(id_s)
@@ -27,7 +30,7 @@ func inputJason(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	response := structcommon.JsonResponse{Id: id, Message: message}
+	response := JsonResponse{Id: id, Message: message}
 
 	JsonInput, err = json.Marshal(response)
 	if err != nil {
@@ -39,7 +42,7 @@ func inputJason(w http.ResponseWriter, r *http.Request) {
 	w.Write(JsonInput)
 }
 
-func outputJason(w http.ResponseWriter, r *http.Request) {
+func outputJson(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Println("jsonInput:", string(JsonInput))
 
@@ -58,9 +61,17 @@ func outputJason(w http.ResponseWriter, r *http.Request) {
 
 func reverseRedir(JsonInput []byte) ([]byte, error) {
 
-	url := "http://localhost:5000/reverJson"
+	/* During k8s deployment serviceName := os.Getenv("SECOND_APP_SERVICE_NAME")
+	url := "http://" + serviceName + ":5000/reverJson"  */
+
+	// Read the URL from an environment variable
+	host := os.Getenv("OUTPUTAPP_HOST")
+	url := "http://" + host + "/reverJson"
 
 	fmt.Println("reverseRedir:", string(JsonInput))
+	fmt.Println("OUTPUTAPP_HOST", host)
+	fmt.Println("connecting to app2")
+	//url := "http://app2:5000/reverJson"
 
 	reqBody := bytes.NewBuffer(JsonInput)
 
@@ -70,25 +81,27 @@ func reverseRedir(JsonInput []byte) ([]byte, error) {
 	}
 	defer resp.Body.Close()
 
+	fmt.Println("connecting to app2", url)
+
 	if resp.StatusCode != http.StatusOK {
 		return nil, err
 	}
 
-	outputJason, err := io.ReadAll(resp.Body)
+	outputJson, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println("outputJason:", string(outputJason))
+	fmt.Println("outputJson:", string(outputJson))
 
-	return outputJason, nil
+	return outputJson, nil
 }
 
 func main() {
 
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("/inputJason", inputJason)
-	mux.HandleFunc("/outputJason", outputJason)
+	mux.HandleFunc("/inputJson", inputJson)
+	mux.HandleFunc("/outputJson", outputJson)
 
 	http.ListenAndServe(":3000", mux)
 }

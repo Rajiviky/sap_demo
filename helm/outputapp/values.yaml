@@ -1,0 +1,25 @@
+outputapp:
+  labels:
+    app: outputapp
+
+  deploy:
+    name: outputapp-deploy
+    replicas: 1
+    containers:
+      name: outputapp
+      imagePullPolicy: IfNotPresent
+      image: rajimcy/codingchallenge-si
+      tag: 1.1.0-outputapp
+      ports:
+        containerPort: 5000
+        name: outputhttp
+
+  service:
+    name: outputapp-svc
+    type: ClusterIP 
+    labels:
+      app: outputapp
+    ports:
+      name: port-outputapp
+      port: 70
+      targetPort: outputhttp

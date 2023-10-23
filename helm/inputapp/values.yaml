@@ -1,0 +1,27 @@
+inputapp:
+  labels:
+    app: inputapp
+
+  deploy:
+    name: inputapp-deploy
+    replicas: 2
+    containers:
+      name: inputapp
+      imagePullPolicy: IfNotPresent
+      image: rajimcy/codingchallenge-si
+      tag: 1.1.0-inputapp
+      ports:
+        containerPort: 3000
+        name: inputapphttp
+        protocol: TCP
+
+
+  service:
+    name: inputapp-svc
+    type: ClusterIP  
+    labels:
+      app: inputapp
+    ports:
+      name: port-inputapp
+      port: 80
+      targetPort: inputapphttp  

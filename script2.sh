@@ -7,7 +7,7 @@ tag_exists_on_dockerhub() {
   local exists=$(docker pull "$image:$tag" 2>&1 | grep -c "Image is up to date")
   if [ "$exists" -eq 1 ]; then
     return 0
-  elses
+  else
     return 1
   fi
 }
@@ -22,7 +22,28 @@ is_valid_tag() {
   return 0
 }
 
+# Function to build and push the Docker image
+build_and_push_image() {
+  local docker_repo="$1"
+  local tag="$2"
+  local app_directory="$3"
 
+  echo "Building Docker image $tag for $app_name from $app_directory..."
+  docker build -t "$docker_repo:$tag" "$app_directory" && \
+  echo "Pushing Docker image to Docker Hub..." && \
+  docker push "$docker_repo:$tag" && \
+  echo "Finished pushing image to $docker_repo"
+}
+
+# Function to deploy the Helm chart
+deploy_helm_chart() {
+  local app_name="$1"
+
+  echo "Applying Helm configuration for $app_name..."
+  helm install -f helm/$app_name/values.yaml $app_name helm/$app_name
+}
+
+# Main script
 docker_repo="rajimcy/codingchallenge-si"
 
 while true; do
@@ -63,45 +84,32 @@ else
   exit 1
 fi
 
-# Build the Docker image from the chosen directory
-echo "Building Docker image $tag for $app_name from $app_directory..."
-docker build -t "$docker_repo:$tag" "$app_directory" && \
-echo "Pushing Docker image to Docker Hub..." && \
-docker push "$docker_repo:$tag" && \
-echo "Finished pushing image... to $docker_rep"
+# Build and push the Docker image
+build_and_push_image "$docker_repo" "$tag" "$app_directory"
 
-echo "-----------"
+# Deploy the Helm chart
+deploy_helm_chart "$app_name"
 
-echo "apply helm config files"
-helm install -f helm/$app_name/values.yaml $app_name helm/$app_name && \
+# Ask the user if they want to build and deploy another application or tag
+read -p "Do you want to build and deploy another application or tag? (yes/no): " continue
+if [ "$continue" != "yes" ]; then
+  # If the user selects "no," proceed with the final steps
+  read -p "Enter the 'id': " id
+  read -p "Enter the 'message': " message
 
-echo "-----------"
+  base_url="http://demoinputapp.info"
 
-echo "Listing helm repo"
-helm list
+  input_url="$base_url/inputJason?id=$id&message=$message"
+  output_url="$base_url/outputJason"
 
-echo "-----------"
+  input_response=$(curl -s "$input_url")
+  output_response=$(curl -s "$output_url")
 
-echo "List of services deployed"
-kubectl get po,deploy,svc 
+  echo "HTTP responses from inputapp"
 
+  echo "Response from $input_url:"
+  echo "$input_response"
 
-read -p "Enter the 'id': " id
-read -p "Enter the 'message': " message
-
-base_url="http://demoinputapp.info"
-
-input_url="$base_url/inputJason?id=$id&message=$message"
-output_url="$base_url/outputJason"
-
-input_response=$(curl -s "$input_url")
-output_response=$(curl -s "$output_url")
-
-
-echo "HTTP responses from inputapp"
-
-echo "Response from $input_url:"
-echo "$input_response" && \
-
-echo "Response from $output_url:"
-echo "$output_response"
+  echo "Response from $output_url:"
+  echo "$output_response"
+fi

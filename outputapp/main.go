@@ -3,9 +3,12 @@ package main
 import (
 	"encoding/json"
 	"net/http"
-
-	"github.com/Rajiviky/sap_demo/tree/raji/structcommon"
 )
+
+type JsonResponse struct {
+	Id      int    `json:"id"`
+	Message string `json:"message"`
+}
 
 func revMsg(input string) string {
 	runes := []rune(input)
@@ -17,17 +20,17 @@ func revMsg(input string) string {
 }
 
 func reverseJson(w http.ResponseWriter, r *http.Request) {
-	var req structcommon.JsonResponse
+	var req JsonResponse
 
 	JsonDec := json.NewDecoder(r.Body)
 	if err := JsonDec.Decode(&req); err != nil {
-		w.WriteHeader(http.StatusBadRequest)S
+		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
 	revMsg := revMsg(req.Message)
-	revRes := structcommon.JsonResponse{
-		ID:      req.ID,
+	revRes := JsonResponse{
+		Id:      req.Id,
 		Message: revMsg,
 	}
 
