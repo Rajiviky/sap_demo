@@ -77,8 +77,8 @@ while true; do
   git push origin "$tag" && \
   echo "changes Tagged and pushed successfully!"
 
-  app_name=$(echo "$tag" | cut -d '-' -f 2)
-  app_version=$(echo "$tag" | cut -d '-' -f 1)
+  app_name=$(echo "$tag" | cut -d '-' -f 1)
+  app_version=$(echo "$tag" | cut -d '-' -f 2)
 
   # Choose the directory based on app_name
   if [ "$app_name" == "inputapp" ]; then
