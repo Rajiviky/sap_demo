@@ -1,0 +1,20 @@
+version: '3'
+services:
+  inputapp:
+    build:
+      context: ./inputapp
+    container_name: inputapp
+    ports:
+      - "3000:3000"
+    environment:
+      - OUTPUTAPP_HOST=outputapp
+    depends_on:
+      - inputapp
+
+
+  outputapp:
+    build:
+      context: ./outputapp
+    container_name: outputapp
+    ports:
+      - "5000:5000"
