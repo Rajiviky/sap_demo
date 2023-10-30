@@ -26,12 +26,16 @@ build_and_push_image() {
   local docker_repo="$1"
   local tag="$2"
   local app_directory="$3"
-
+  echo "..............................................................................."
   echo "Building Docker image $tag for $app_name from $app_directory..."
-  docker build -t "$docker_repo:$tag" "$app_directory" && \
+  echo "..............................................................................."
+  docker build -t "$docker_repo:$tag" "$app_directory" > /dev/null 2>&1 && \
   echo "Pushing Docker image to Docker Hub..." && \
-  docker push "$docker_repo:$tag" && \
+  docker push "$docker_repo:$tag" > /dev/null 2>&1 && \
+  echo "..............................................................................."
   echo "Finished pushing image to $docker_repo"
+  echo "..............................................................................."
+
 }
 
 # Function to deploy the Helm chart
@@ -41,11 +45,15 @@ deploy_helm_chart() {
   release_exists=$(helm list -q -n default | grep "$app_name")
 
   if [ -z "$release_exists" ]; then
+    echo "..............................................................................."
     echo "Installing Helm configuration for $app_name..."
     helm install -f helm/$app_name/values.yaml $app_name helm/$app_name
+    echo "..............................................................................."
   else
+    echo "..............................................................................."
     echo "Upgrading Helm configuration for $app_name..."
     helm upgrade -f helm/$app_name/values.yaml $app_name helm/$app_name
+    echo "..............................................................................."
   fi
 }
 
@@ -67,9 +75,12 @@ while true; do
 done
 
 
-
 while true; do
+  # Prompt the user for a commit message
   read -p "Enter a commit message: " commit_message
+
+  app_name=$(echo "$tag" | cut -d '-' -f 1)
+  app_version=$(echo "$tag" | cut -d '-' -f 2)
 
   # Commit and push the changes
   git add ./$app_name && \
@@ -78,6 +89,7 @@ while true; do
   git push origin "$tag" && \
   echo "changes Tagged and pushed successfully!"
 
+  echo "..............................................................................."
   
   # Choose the directory based on app_name
   if [ "$app_name" == "inputapp" ]; then
@@ -94,9 +106,9 @@ while true; do
 
   read -p "Proceed with deploying the Helm chart for $app_name? (yes/no): " deploy_confirmation
     if [ "$deploy_confirmation" != "yes" ]; then
-  echo "Deployment canceled. Exiting."
-  exit 0
-   fi
+      echo "skipped deployment and exiting...."
+       exit 0
+    fi
 
   # Deploy the Helm chart
   deploy_helm_chart "$app_name"
@@ -110,13 +122,11 @@ while true; do
   while true; do
     # Prompt the user for a valid tag
     read -p "Enter the tag (e.g., inputapp-1.1.0 or outputapp-1.1.0): " tag
-     echo $tag
+     echo "New tag:"$tag
     if is_valid_tag "$tag"; then
       if tag_exists_on_dockerhub "$docker_repo" "$tag"; then
         echo "Image with tag $tag already exists on Docker Hub. Please choose a different tag."
       else
-        app_name=$(echo "$tag" | cut -d '-' -f 1)
-        app_version=$(echo "$tag" | cut -d '-' -f 2)
         break
       fi
     else
@@ -126,19 +136,23 @@ while true; do
 done
 
 # Proceed with the final steps
+ # Retrieve the host from the Ingress using kubectl
+host=$(kubectl get ingress -o jsonpath='{.items[0].spec.rules[0].host}')
+
+# Construct the base URL by appending the host to the protocol
+base_url="http://$host"
+echo "..............................................................................."
+
 read -p "Enter the 'id': " id
 read -p "Enter the 'message': " message
-
-base_url="http://demoinputapp.info"
 
 input_url="$base_url/inputJson?id=$id&message=$message"
 output_url="$base_url/outputJson"
 
 input_response=$(curl -s "$input_url")
 output_response=$(curl -s "$output_url")
-
+echo "..............................................................................."
 echo "HTTP responses from inputapp"
-
 echo "Response from $input_url:"
 echo "$input_response"
 
